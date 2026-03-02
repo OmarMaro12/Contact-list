@@ -1,9 +1,31 @@
 let contacts = [];
+
+const savedData = localStorage.getItem("contacts");
+
+if (savedData) {
+  const contactArray = savedData.split("|");
+
+  contactArray.forEach(item => {
+    const [name, email, phone, dob] = item.split(",");
+    contacts.push({ name, email, phone, dob });
+  });
+}
+
 const contactTable = document
   .getElementById("contactTable")
   .getElementsByTagName("tbody")[0];
 
 document.getElementById("addContact").addEventListener("click", addContact);
+
+function saveToLocalStorage() {
+  let dataString = contacts
+    .map(contact => 
+      `${contact.name},${contact.email},${contact.phone},${contact.dob}`
+    )
+    .join("|");
+
+  localStorage.setItem("contacts", dataString);
+}
 
 function addContact() {
   const name = document.getElementById("name").value;
@@ -12,8 +34,9 @@ function addContact() {
   const dob = document.getElementById("dob").value;
 
   if (name && email && phone && dob) {
-    const contact = { name, email, phone, dob };
-    contacts.push(contact);
+    contacts.push({ name, email, phone, dob });
+
+    saveToLocalStorage();
     renderContacts();
     clearInputFields();
   } else {
@@ -22,7 +45,8 @@ function addContact() {
 }
 
 function renderContacts() {
-  contactTable.innerHTML = ""; 
+  contactTable.innerHTML = "";
+
   contacts.forEach((contact, index) => {
     const row = contactTable.insertRow();
     row.insertCell(0).innerText = contact.name;
@@ -32,25 +56,28 @@ function renderContacts() {
 
     const actionsCell = row.insertCell(4);
     actionsCell.innerHTML = `
-            <button onclick="editContact(${index})">Edit</button>
-            <button onclick="deleteContact(${index})">Delete</button>
-        `;
+      <button onclick="editContact(${index})">Edit</button>
+      <button onclick="deleteContact(${index}))">Delete</button>
+    `;
   });
 }
 
 function editContact(index) {
   const contact = contacts[index];
+
   document.getElementById("name").value = contact.name;
   document.getElementById("email").value = contact.email;
   document.getElementById("phone").value = contact.phone;
   document.getElementById("dob").value = contact.dob;
 
   contacts.splice(index, 1);
+  saveToLocalStorage();
   renderContacts();
 }
 
 function deleteContact(index) {
   contacts.splice(index, 1);
+  saveToLocalStorage();
   renderContacts();
 }
 
@@ -60,14 +87,7 @@ function clearInputFields() {
   document.getElementById("phone").value = "";
   document.getElementById("dob").value = "";
 }
-const displayContact = () => {
-  const contactListElement = document.getElementById("contact-list");
-  const newContact = document.createElement("li");
-  newContact.innerText = "New contact";
-  contactListElement.appendChild(newContact);
+
+window.onload = function () {
+  renderContacts();
 };
-const form = document.getElementById("addContactForm");
-form.addEventListener("submit", (event) => {
-  event.preventDefault();
-  displayContact();
-});
